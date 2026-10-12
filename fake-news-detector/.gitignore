@@ -1,0 +1,7 @@
+# big dataset files (download them from Kaggle instead)
+Fake.csv
+True.csv
+# local model files and caches
+*.joblib
+__pycache__/
+confusion_matrix.png

@@ -1,0 +1,165 @@
+/* Fake News Detector - one idea: the checker marks up your headline like an editor's highlighter.
+   Red = pushes toward fake, teal = pushes toward real. Everything else stays quiet. */
+
+:root {
+  --paper: #F1F3F7;
+  --surface: #FFFFFF;
+  --ink: #14171F;
+  --muted: #566070;
+  --line: #D5DAE3;
+  --fake: #C41F33;          /* text colour for "fake" */
+  --real: #0F7A69;          /* text colour for "real" */
+  --fake-mark: #E5384B;     /* highlighter colours */
+  --real-mark: #1AA38F;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #11141B;
+    --surface: #1A1E28;
+    --ink: #EEF0F4;
+    --muted: #9AA4B5;
+    --line: #2B3242;
+    --fake: #FF7A89;
+    --real: #4CCDB7;
+    --fake-mark: #D0344A;
+    --real-mark: #17917F;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 1.0625rem/1.65 var(--sans); -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 62rem; margin: 0 auto; padding-left: clamp(1rem, 4vw, 2rem); padding-right: clamp(1rem, 4vw, 2rem); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -999px; top: 0; background: var(--ink); color: var(--paper); padding: .6rem 1rem; z-index: 10; }
+.skip:focus { left: 0; }
+a { color: inherit; text-underline-offset: .2em; }
+:focus-visible { outline: 3px solid var(--real); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1.25rem; padding-bottom: 1.25rem; flex-wrap: wrap; }
+.brand { font: 700 1.15rem/1 var(--serif); letter-spacing: -.01em; text-decoration: none; }
+.top nav { display: flex; gap: 1.25rem; font-size: .95rem; }
+.top nav a { color: var(--muted); text-decoration: none; }
+.top nav a:hover { color: var(--ink); text-decoration: underline; }
+
+/* ---------- hero ---------- */
+.hero { padding-top: clamp(2rem, 7vw, 4.5rem); padding-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+h1 {
+  font: 700 clamp(2.2rem, 6vw, 3.9rem)/1.04 var(--serif); letter-spacing: -.025em;
+  margin: 0 0 1.25rem; max-width: 16em; text-wrap: balance;
+}
+.lead { font-size: 1.2rem; color: var(--muted); max-width: 38em; margin: 0; }
+
+/* ---------- the checker ---------- */
+.desk {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: clamp(1rem, 3vw, 1.75rem);
+}
+textarea {
+  display: block; width: 100%; resize: vertical; min-height: 6.5rem;
+  font: 1.35rem/1.45 var(--serif); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem;
+}
+textarea::placeholder { color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; margin-top: 1rem; }
+.btn {
+  font: 600 1rem/1 var(--sans); background: var(--ink); color: var(--paper); border: 0;
+  border-radius: 999px; padding: .95rem 1.5rem; cursor: pointer;
+}
+.btn:hover { opacity: .88; }
+.samples { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .95rem; color: var(--muted); }
+.chip {
+  font: .95rem/1 var(--sans); color: var(--ink); background: transparent; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: .55rem .9rem;
+}
+.chip:hover { border-color: var(--ink); }
+
+/* ---------- result ---------- */
+.result { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.verdict { margin: 0 0 1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; }
+.verdict strong { font: 700 clamp(1.7rem, 4vw, 2.3rem)/1.1 var(--serif); letter-spacing: -.015em; }
+.verdict.fake strong { color: var(--fake); }
+.verdict.real strong { color: var(--real); }
+.verdict span { color: var(--muted); }
+
+.annotated { font: clamp(1.3rem, 3vw, 1.8rem)/1.75 var(--serif); margin: 0 0 1.25rem; overflow-wrap: anywhere; }
+.mark {
+  --c: transparent;
+  background-image: linear-gradient(var(--c), var(--c));
+  background-repeat: no-repeat; background-position: 0 70%; background-size: 0% 88%;
+  padding: 0 .14em; margin: 0 -.14em; border-radius: .18em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  transition: background-size .5s ease-out;
+}
+.mark.fake { --c: color-mix(in srgb, var(--fake-mark) calc(var(--a) * 100%), transparent); }
+.mark.real { --c: color-mix(in srgb, var(--real-mark) calc(var(--a) * 100%), transparent); }
+.mark.on { background-size: 100% 88%; }
+
+.meter { margin: 0 0 1.25rem; max-width: 32rem; }
+.meter-track { position: relative; height: .6rem; border-radius: 999px; background: linear-gradient(90deg, var(--real-mark), var(--line) 50%, var(--fake-mark)); }
+.meter-pin {
+  position: absolute; top: 50%; left: 50%; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+  background: var(--ink); border: 3px solid var(--surface); transform: translate(-50%, -50%);
+  transition: left .8s cubic-bezier(.2, .9, .3, 1.1);
+}
+.meter-ends { display: flex; justify-content: space-between; font-size: .9rem; color: var(--muted); margin-top: .4rem; }
+
+.signals { margin: 0 0 1rem; font-size: 1rem; }
+.signals p { margin: 0 0 .25rem; }
+.signals .toward-fake { color: var(--fake); font-weight: 600; }
+.signals .toward-real { color: var(--real); font-weight: 600; }
+.legend { color: var(--muted); font-size: .95rem; margin: 0 0 1rem; }
+.models { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; margin: 0; font-size: .95rem; }
+.models dt { color: var(--muted); }
+.models dd { margin: 0; }
+.evidence { color: var(--muted); font-size: .95rem; margin: .75rem 0 0; }
+.plain { font: 1.15rem/1.6 var(--serif); margin: 0 0 1rem; overflow-wrap: anywhere; }
+.msg-title { font: 700 1.5rem/1.2 var(--serif); margin: 0 0 .5rem; }
+.msg-body { margin: 0; color: var(--muted); max-width: 40em; }
+.note { margin: 1.25rem 0 0; font-size: .92rem; color: var(--muted); max-width: 46em; }
+
+/* ---------- content sections ---------- */
+.block { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 1rem 2.5rem; padding-top: clamp(3rem, 7vw, 5rem); }
+.block h2 { font: 700 1.6rem/1.15 var(--serif); letter-spacing: -.015em; margin: 0; position: sticky; top: 1rem; }
+.body { max-width: 42rem; }
+.body > p:first-child { margin-top: 0; }
+.body h3 { font: 700 1.2rem/1.3 var(--serif); margin: 2.25rem 0 .5rem; }
+.body p { margin: 0 0 1rem; }
+
+.steps { list-style: none; counter-reset: step; margin: 1.5rem 0 0; padding: 0; position: relative; }
+.steps::before { content: ""; position: absolute; left: 1.05rem; top: .5rem; bottom: .5rem; width: 2px; background: var(--line); }
+.steps li { counter-increment: step; position: relative; padding: 0 0 1.25rem 3.25rem; }
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: -.1rem; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+  display: grid; place-items: center; background: var(--surface); border: 2px solid var(--line);
+  font: 700 .95rem/1 var(--sans);
+}
+.steps li:last-child { padding-bottom: 0; }
+
+.tools { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1.5rem; margin: 0; }
+.tools dt { font-weight: 600; }
+.tools dd { margin: 0; color: var(--muted); }
+.limits { margin: 0; padding-left: 1.2rem; }
+.limits li { margin-bottom: .9rem; padding-left: .25rem; }
+
+.foot { padding-top: clamp(3rem, 7vw, 5rem); padding-bottom: 3rem; color: var(--muted); font-size: .95rem; }
+
+/* ---------- small screens ---------- */
+@media (max-width: 760px) {
+  .block { grid-template-columns: 1fr; }
+  .block h2 { position: static; }
+  .tools { grid-template-columns: 1fr; gap: 0; }
+  .tools dd { margin-bottom: .6rem; }
+}
+
+/* ---------- respect reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .mark, .meter-pin { transition: none; }
+}

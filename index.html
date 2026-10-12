@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fake News Detector</title>
+  <meta name="description" content="Paste a headline and see which words make a machine learning model call it fake or real. Runs in your browser.">
+  <meta property="og:title" content="Fake News Detector">
+  <meta property="og:description" content="Paste a headline and see which words make a machine learning model call it fake or real.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#14171F">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#desk">Skip to the checker</a>
+
+  <header class="top wrap">
+    <a class="brand" href="#top">Fake News Detector</a>
+    <nav aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#limits">Limits</a>
+      <a class="repo-link" href="https://github.com/YOUR_USERNAME/fake-news-detector">Source code</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <h1>Paste a headline. See which words gave it away.</h1>
+      <p class="lead">A machine learning model reads the text, scores every word, and says whether the writing looks like fake news or real news. It runs in your browser, so nothing you type is sent anywhere.</p>
+    </section>
+
+    <section class="wrap">
+      <div class="desk" id="desk">
+        <label class="sr-only" for="input">Headline or article text</label>
+        <textarea id="input" rows="3" spellcheck="false" placeholder="Type or paste a headline here"></textarea>
+
+        <div class="actions">
+          <button id="check" class="btn" type="button">Check headline</button>
+          <div class="samples">
+            <span>Or try one:</span>
+            <button class="chip" type="button" data-sample="Shocking secret cure doctors don't want you to know, share now">Miracle cure claim</button>
+            <button class="chip" type="button" data-sample="Finance ministry announces new tax filing deadline for the year">Tax deadline news</button>
+            <button class="chip" type="button" data-sample="Forward this message to everyone or your account will be blocked tomorrow">Chain message</button>
+          </div>
+        </div>
+
+        <div id="result" class="result" hidden aria-live="polite"></div>
+        <p id="model-note" class="note"></p>
+      </div>
+    </section>
+
+    <section class="block wrap" id="how">
+      <div class="rail"><h2>How it decides</h2></div>
+      <div class="body">
+        <p>A Python script trains the model on labelled news. This page then runs the finished model in JavaScript, using the same steps, so it works on free static hosting.</p>
+        <ol class="steps">
+          <li><strong>Load data.</strong> Headlines come with a label: 1 for fake, 0 for real.</li>
+          <li><strong>Clean text.</strong> Lowercase everything and drop links and symbols.</li>
+          <li><strong>Split data.</strong> 75% to learn from, 25% hidden for testing.</li>
+          <li><strong>Turn text into numbers.</strong> TF-IDF scores every word and word pair.</li>
+          <li><strong>Train the model.</strong> Passive Aggressive learns word weights. Logistic Regression is the baseline to beat.</li>
+          <li><strong>Test and predict.</strong> Check accuracy on the hidden 25%, then judge new text. This last step is what happens when you press the button above.</li>
+        </ol>
+
+        <h3>TF-IDF</h3>
+        <p>Each word gets a score: how often it appears in your text (TF) times how rare it is across all training texts (IDF). &ldquo;The&rdquo; appears everywhere, so it scores low. &ldquo;Shocking&rdquo; is rare, so it scores high. The model learns which high-scoring words turn up in fake news and which in real news.</p>
+
+        <h3>Passive Aggressive learning</h3>
+        <p>The model learns one example at a time. If it already got the example right, it changes nothing (passive). If it got it wrong, it corrects its word weights straight away (aggressive). Logistic Regression learns from all the examples together and acts as the baseline.</p>
+
+        <h3>Built with</h3>
+        <dl class="tools">
+          <dt>Python 3</dt><dd>The language the model is trained in.</dd>
+          <dt>pandas</dt><dd>Loads and joins the data tables.</dd>
+          <dt>scikit-learn</dt><dd>TF-IDF, both models and the accuracy reports.</dd>
+          <dt>joblib, matplotlib</dt><dd>Saving the model and drawing the confusion matrix.</dd>
+          <dt>JavaScript</dt><dd>Runs the finished model in your browser.</dd>
+          <dt>GitHub Pages</dt><dd>Hosts this site for free.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="block wrap" id="limits">
+      <div class="rail"><h2>What it can&rsquo;t do</h2></div>
+      <div class="body">
+        <ul class="limits">
+          <li><strong>It reads style, not facts.</strong> A false claim written calmly can look real, and a true story in dramatic words can look fake.</li>
+          <li><strong>It only knows words from its training data.</strong> Words it has never seen are ignored.</li>
+          <li><strong>Public datasets have source clues.</strong> In the Kaggle data, real articles often name the news agency, which can inflate accuracy. Test on a second dataset such as LIAR.</li>
+          <li><strong>English only.</strong></li>
+          <li><strong>The confidence number is a score, not a true probability.</strong> Passive Aggressive does not produce probabilities, so the page squashes its score into 0 to 100%.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>Runs entirely in your browser. Source code and training steps are in the <a class="repo-link" href="https://github.com/YOUR_USERNAME/fake-news-detector">GitHub repository</a>.</p>
+  </footer>
+
+  <script src="assets/model.js"></script>
+  <script src="assets/engine.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
